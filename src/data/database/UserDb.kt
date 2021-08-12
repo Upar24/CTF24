@@ -1,0 +1,65 @@
+package com.upar.data.database
+
+import com.upar.data.collections.User
+import com.upar.data.requests.UpdateUserRequest
+import org.litote.kmongo.`in`
+import org.litote.kmongo.coroutine.coroutine
+import org.litote.kmongo.eq
+import org.litote.kmongo.reactivestreams.KMongo
+
+private val client = KMongo.createClient().coroutine
+private val database= client.getDatabase("CTF060621")
+private val users= database.getCollection<User>()
+
+suspend fun registerUser(user: User): Boolean{
+    val createdAt = System.currentTimeMillis()
+    val registerUser= User(
+        username=user.username,
+        password = user.password,
+        name="",
+        clubName = "",
+        ign="",
+        bio="",
+        createdAcc = createdAt,
+        lastActive = createdAt
+    )
+    return users.insertOne(registerUser).wasAcknowledged()
+}
+suspend fun checkIfUserExists(username: String):Boolean{
+    return users.findOne(User::username eq username) != null
+}
+suspend fun checkPasswordForUsername(username: String,passwordToCheck: String): Boolean{
+    val actualPassword= users.findOne(User::username eq username)?.password ?: return false
+    return actualPassword == passwordToCheck
+}
+suspend fun getUser(username: String): User? {
+    return users.findOne(User::username eq username)
+}
+suspend fun updateUser(username: String,updateUserReq:UpdateUserRequest):Boolean{
+    val user = users.findOne(User::username eq username) ?: return false
+    val userUpdate= User(
+        user.username,
+        user.password,
+        updateUserReq.name,
+        updateUserReq.clubName,
+        updateUserReq.ign,
+        updateUserReq.bio,
+        user.createdAcc,
+        user.lastActive,
+        user._id
+    )
+    return users.updateOneById(user._id,userUpdate).wasAcknowledged()
+}
+suspend fun getListUser(listUsername:List<String>):List<User>{
+    return users.find(User::username `in` listUsername).toList()
+}
+
+
+
+
+
+
+
+
+
+
