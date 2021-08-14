@@ -6,6 +6,7 @@ import org.litote.kmongo.`in`
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.eq
 import org.litote.kmongo.reactivestreams.KMongo
+import org.litote.kmongo.setValue
 
 private val client = KMongo.createClient().coroutine
 private val database= client.getDatabase("CTF060621")
@@ -50,8 +51,18 @@ suspend fun updateUser(username: String,updateUserReq:UpdateUserRequest):Boolean
     )
     return users.updateOneById(user._id,userUpdate).wasAcknowledged()
 }
-suspend fun getListUser(listUsername:List<String>):List<User>{
+suspend fun updatePassword(username: String,oneRequest: String):Boolean{
+    val user = users.findOne(User::username eq username) ?: return false
+    return users.updateOneById(user._id, setValue(User::password,oneRequest)).wasAcknowledged()
+}
+suspend fun getListUser(listUsername:List<String>):List<User> {
     return users.find(User::username `in` listUsername).toList()
+}
+suspend fun getListUserClub(oneRequest:String):List<User>{
+    return users.find(User::clubName eq oneRequest).toList()
+}
+suspend fun getListUserIGN(oneRequest: String):List<User>{
+    return users.find(User::ign eq oneRequest).toList()
 }
 
 

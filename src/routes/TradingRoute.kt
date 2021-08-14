@@ -104,6 +104,18 @@ fun Route.tradingRoute(){
             call.respond(OK,tradings)
         }
     }
+    route("/gettitlesearch"){
+        post {
+            val request= try {
+                call.receive<OneRequest>()
+            }catch (e:ContentTransformationException){
+                call.respond(BadRequest)
+                return@post
+            }
+            val tradings= getListTradingTitle(request.property)
+            call.respond(OK,tradings)
+        }
+    }
 }
 
 

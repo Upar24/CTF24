@@ -61,6 +61,10 @@ suspend fun getSellingSearch(query: String):List<Trading>{
     val search = query.toLowerCase()
     return tradings.find(Trading::itemSelling eq search).sort(ascending(Trading::date)).toList()
 }
+suspend fun getListTradingTitle(oneRequest:String):List<Trading>{
+    val request= oneRequest.toLowerCase()
+    return tradings.find(Trading::title eq request).sort(ascending(Trading::date)).toList()
+}
 //suspend fun getBuyingSearch(query:String):List<Trading>{
 //   tradings.ensureIndex(Trading::itemBuying.textIndex())
 //    val list= tradings.find(text(query, TextSearchOptions().caseSensitive(false))).sort(ascending(Trading::date)).toList()

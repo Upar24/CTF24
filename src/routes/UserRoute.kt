@@ -84,7 +84,7 @@ fun Route.userRoute(){
             call.respond(OK,userList)
         }
     }
-    route("updateuser"){
+    route("/updateuser"){
         authenticate {
             post {
                 val username = call.principal<UserIdPrincipal>()!!.name
@@ -100,6 +100,45 @@ fun Route.userRoute(){
                 else
                     call.respond(OK,SimpleResponse(false,"can not update the profile"))
             }
+        }
+    }
+    route("/updatepassword"){
+        authenticate {
+            post {
+                val username= call.principal<UserIdPrincipal>()!!.name
+                val request=try {
+                    call.receive<OneRequest>()
+                }catch (e:ContentTransformationException){
+                    call.respond(OK,SimpleResponse(false,"cant send the update user data"))
+                    return@post
+                }
+                val update= updatePassword(username,request.property)
+                if(update)call.respond(OK) else call.respond(BadRequest)
+            }
+        }
+    }
+    route("/getlistuserclub"){
+        post {
+            val request= try {
+                call.receive<OneRequest>()
+            }catch (e:ContentTransformationException){
+                call.respond(OK)
+                return@post
+            }
+            val result = getListUserClub(request.property)
+            call.respond(OK,result)
+        }
+    }
+    route("/getlistuserign"){
+        post {
+            val request= try {
+                call.receive<OneRequest>()
+            }catch (e:ContentTransformationException){
+                call.respond(OK)
+                return@post
+            }
+            val result = getListUserIGN(request.property)
+            call.respond(OK,result)
         }
     }
 }
