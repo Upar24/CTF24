@@ -6,14 +6,12 @@ import org.litote.kmongo.`in`
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.eq
 import org.litote.kmongo.reactivestreams.KMongo
-import org.litote.kmongo.setValue
 
 private val client = KMongo.createClient().coroutine
 private val database= client.getDatabase("CTF060621")
 private val users= database.getCollection<User>()
 
 suspend fun registerUser(user: User): Boolean{
-    val createdAt = System.currentTimeMillis()
     val registerUser= User(
         username=user.username,
         password = user.password,
@@ -21,8 +19,7 @@ suspend fun registerUser(user: User): Boolean{
         clubName = "",
         ign="",
         bio="",
-        createdAcc = createdAt,
-        lastActive = createdAt
+        created = System.currentTimeMillis()
     )
     return users.insertOne(registerUser).wasAcknowledged()
 }
@@ -45,16 +42,15 @@ suspend fun updateUser(username: String,updateUserReq:UpdateUserRequest):Boolean
         updateUserReq.clubName,
         updateUserReq.ign,
         updateUserReq.bio,
-        user.createdAcc,
-        user.lastActive,
+        user.created,
         user._id
     )
     return users.updateOneById(user._id,userUpdate).wasAcknowledged()
 }
-suspend fun updatePassword(username: String,oneRequest: String):Boolean{
-    val user = users.findOne(User::username eq username) ?: return false
-    return users.updateOneById(user._id, setValue(User::password,oneRequest)).wasAcknowledged()
-}
+//suspend fun updatePassword(username: String,oneRequest: String):Boolean{
+//    val user = users.findOne(User::username eq username) ?: return false
+//    return users.updateOneById(user._id, setValue(User::password,oneRequest)).wasAcknowledged()
+//}
 suspend fun getListUser(listUsername:List<String>):List<User> {
     return users.find(User::username `in` listUsername).toList()
 }

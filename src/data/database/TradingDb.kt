@@ -1,7 +1,5 @@
 package com.upar.data.database
 
-import com.mongodb.client.model.IndexOptions
-import com.mongodb.client.model.TextSearchOptions
 import com.upar.data.collections.Trading
 import com.upar.data.collections.User
 import org.litote.kmongo.*
@@ -44,10 +42,10 @@ suspend fun deleteTrading(username: String,trading: Trading):Boolean{
     }
 }
 suspend fun getAllTrading():List<Trading>{
-    return tradings.find().sort(ascending(Trading::date)).toList()
+    return tradings.find().sort(descending(Trading::date)).toList()
 }
 suspend fun getAllUserTrading(username: String):List<Trading>{
-    return tradings.find(Trading::username eq username).sort(ascending(Trading::date)).toList()
+    return tradings.find(Trading::username eq username).sort(descending(Trading::date)).toList()
 }
 suspend fun getTrading(trading: Trading): Trading?{
     return tradings.findOne(Trading::_id eq trading._id)
@@ -55,15 +53,15 @@ suspend fun getTrading(trading: Trading): Trading?{
 
 suspend fun getBuyingSearch(query:String):List<Trading>{
     val search = query.toLowerCase()
-    return tradings.find(Trading::itemBuying eq search).sort(ascending(Trading::date)).toList()
+    return tradings.find(Trading::itemBuying eq search).sort(descending(Trading::date)).toList()
 }
 suspend fun getSellingSearch(query: String):List<Trading>{
     val search = query.toLowerCase()
-    return tradings.find(Trading::itemSelling eq search).sort(ascending(Trading::date)).toList()
+    return tradings.find(Trading::itemSelling eq search).sort(descending(Trading::date)).toList()
 }
 suspend fun getListTradingTitle(oneRequest:String):List<Trading>{
     val request= oneRequest.toLowerCase()
-    return tradings.find(Trading::title eq request).sort(ascending(Trading::date)).toList()
+    return tradings.find(Trading::title eq request).sort(descending(Trading::date)).toList()
 }
 //suspend fun getBuyingSearch(query:String):List<Trading>{
 //   tradings.ensureIndex(Trading::itemBuying.textIndex())

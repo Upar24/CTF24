@@ -10,8 +10,7 @@ data class User (
     var clubName:String?="",
     var ign:String?="",
     var bio:String?="",
-    var createdAcc: Long=0,
-    var lastActive:Long=0,
+    var created:Long=0,
     @BsonId
     val _id:String= ObjectId().toString()
 )

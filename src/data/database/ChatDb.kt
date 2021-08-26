@@ -48,7 +48,7 @@ suspend fun saveWall(username: String,wall: Wall):Boolean{
     val date = System.currentTimeMillis()
     val wall1=Wall(
         username,
-        user?.name,
+        user?.ign,
         user?.clubName,
         wall.wallOwner,
         wall.chat,
@@ -62,7 +62,7 @@ suspend fun saveWall(username: String,wall: Wall):Boolean{
     }
 }
 suspend fun getAllWall(wallOwner:String):List<Wall>{
-    return walls.find(Wall::wallOwner eq wallOwner).sort(ascending(Wall::date)).toList()
+    return walls.find(Wall::wallOwner eq wallOwner).sort(descending(Wall::date)).toList()
 }
 suspend fun deleteWall(username: String,wall:Wall):Boolean{
     return if(username==wall.wallOwner){
