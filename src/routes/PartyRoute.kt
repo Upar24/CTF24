@@ -103,6 +103,14 @@ fun Route.partyRoute(){
                     call.respond(OK,SimpleResponse(false,"An unknown error occured"))
                 }
             }
+            get{
+                val delete = deleteTrading() && deleteChat()
+                if(delete){
+                    call.respond(OK,SimpleResponse(true,"deleted"))
+                }else{
+                    call.respond(OK,SimpleResponse(false,"try later"))
+                }
+            }
         }
     }
     route("/togglecheck"){
