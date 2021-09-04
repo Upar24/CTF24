@@ -104,7 +104,8 @@ fun Route.partyRoute(){
                 }
             }
             get{
-                val delete = deleteTrading() && deleteChat()
+                val username= call.principal<UserIdPrincipal>()!!.name
+                val delete = deleteTrading(username) && deleteChat(username)
                 if(delete){
                     call.respond(OK,SimpleResponse(true,"deleted"))
                 }else{

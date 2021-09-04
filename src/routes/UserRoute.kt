@@ -7,6 +7,7 @@ import com.upar.data.requests.ListStringRequest
 import com.upar.data.requests.OneRequest
 import com.upar.data.requests.UpdateUserRequest
 import com.upar.data.responses.SimpleResponse
+import com.upar.util.getHashWithSalt
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
@@ -34,7 +35,7 @@ fun Route.userRoute(){
             }
             val userExists= checkIfUserExists(request.username)
             if(!userExists){
-                if(registerUser(User(request.username,request.password))){
+                if(registerUser(User(request.username, getHashWithSalt(request.password)))){
                     call.respond(OK,SimpleResponse(true,"Successfully created account"))
                 }else{
                     call.respond(OK,SimpleResponse(false,"An unknown error occured"))

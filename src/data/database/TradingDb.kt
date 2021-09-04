@@ -2,7 +2,12 @@ package com.upar.data.database
 
 import com.upar.data.collections.*
 import com.upar.data.requests.UpdateUserRequest
-import com.upar.util.ListString
+import com.upar.util.ListString.hotsale
+import com.upar.util.ListString.lbhneeded
+import com.upar.util.ListString.lbhpost
+import com.upar.util.ListString.random
+import com.upar.util.ListString.upar
+import com.upar.util.checkHashForPassword
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.reactivestreams.KMongo
@@ -33,7 +38,7 @@ suspend fun checkIfUserExists(username: String):Boolean{
 }
 suspend fun checkPasswordForUsername(username: String,passwordToCheck: String): Boolean{
     val actualPassword= users.findOne(User::username eq username)?.password ?: return false
-    return actualPassword == passwordToCheck
+    return checkHashForPassword(passwordToCheck,actualPassword)
 }
 suspend fun getUser(username: String): User? {
     return users.findOne(User::username eq username)
@@ -52,10 +57,6 @@ suspend fun updateUser(username: String,updateUserReq: UpdateUserRequest):Boolea
     )
     return users.updateOneById(user._id,userUpdate).wasAcknowledged()
 }
-//suspend fun updatePassword(username: String,oneRequest: String):Boolean{
-//    val user = users.findOne(User::username eq username) ?: return false
-//    return users.updateOneById(user._id, setValue(User::password,oneRequest)).wasAcknowledged()
-//}
 suspend fun getListUser(listUsername:List<String>):List<User> {
     return users.find(User::username `in` listUsername).toList()
 }
@@ -74,9 +75,9 @@ suspend fun saveTrading(username:String,trading: Trading):Boolean{
         user?.ign,
         trading.title,
         trading.desc,
-        trading.itemBuying.toString().toLowerCase(),
+        trading.itemBuying.toString().lowercase(),
         trading.amountBuying,
-        trading.itemSelling.toString().toLowerCase(),
+        trading.itemSelling.toString().lowercase(),
         trading.amountSelling,
         date,
         trading._id
@@ -96,10 +97,10 @@ suspend fun deleteTrading(username: String,trading: Trading):Boolean{
     }
 }
 suspend fun getAllTrading():List<Trading>{
-    return tradings.find().sort(descending(Trading::date)).toList()
+    return tradings.find().sort(descending(Trading::date)).limit(1000).toList()
 }
 suspend fun getAllUserTrading(username: String):List<Trading>{
-    return tradings.find(Trading::username eq username).sort(descending(Trading::date)).toList()
+    return tradings.find(Trading::username eq username).sort(descending(Trading::date)).limit(1000).toList()
 }
 suspend fun getTrading(trading: Trading): Trading?{
     return tradings.findOne(Trading::_id eq trading._id)
@@ -107,19 +108,19 @@ suspend fun getTrading(trading: Trading): Trading?{
 
 suspend fun getBuyingSearch(query:String):List<Trading>{
     val search = query.lowercase()
-    return tradings.find(Trading::itemBuying eq search).sort(descending(Trading::date)).toList()
+    return tradings.find(Trading::itemBuying eq search).sort(descending(Trading::date)).limit(1000).toList()
 }
 suspend fun getSellingSearch(query: String):List<Trading>{
     val search = query.lowercase()
-    return tradings.find(Trading::itemSelling eq search).sort(descending(Trading::date)).toList()
+    return tradings.find(Trading::itemSelling eq search).sort(descending(Trading::date)).limit(1000).toList()
 }
 suspend fun getListTradingTitle(oneRequest:String):List<Trading>{
     val request= oneRequest.lowercase()
-    return tradings.find(Trading::title eq request).sort(descending(Trading::date)).toList()
+    return tradings.find(Trading::title eq request).sort(descending(Trading::date)).limit(1000).toList()
 }
 suspend fun saveChat(username:String,chat: Chat):Boolean{
-    val listType = listOf(ListString.lbhpost, ListString.lbhneeded, ListString.hotsale, ListString.random)
-    val type=if(chat.type in listType) chat.type else ListString.random
+    val listType = listOf(lbhpost,lbhneeded,hotsale,random)
+    val type=if(chat.type in listType) chat.type else random
     val user=users.findOne(User::username eq username)
     val date = System.currentTimeMillis()
     val chat1= Chat(
@@ -138,18 +139,17 @@ suspend fun saveChat(username:String,chat: Chat):Boolean{
     }
 }
 suspend fun getAllChat():List<Chat>{
-    return chats.find().sort(descending(Chat::date)).toList()
+    return chats.find().sort(descending(Chat::date)).limit(1250).toList()
 }
 suspend fun saveWall(username: String,wall: Wall):Boolean{
     val user=users.findOne(User::username eq username)
-    val date = System.currentTimeMillis()
     val wall1= Wall(
         username,
         user?.ign,
         user?.clubName,
         wall.wallOwner,
         wall.chat,
-        date
+        System.currentTimeMillis()
     )
     val wallExist= walls.findOneById(wall._id) != null
     return if(wallExist){
@@ -178,7 +178,7 @@ suspend fun isTodayExists(idToday:String):Boolean{
     return todays.findOneById(idToday) != null
 }
 suspend fun saveParty(username:String,party: Party):Boolean{
-    return if(username== ListString.upar) {
+    return if(username== upar) {
         val partyExist = isPartyExists(party._id)
         if (partyExist) {
             parties.updateOneById(party._id, party).wasAcknowledged()
@@ -200,7 +200,7 @@ suspend fun getToday(): Today?{
 }
 suspend fun saveDropped(username: String,dropped: Dropped):Boolean{
     val dropExist= isDroppedExists(dropped._id)
-    return if(username== ListString.upar) {
+    return if(username==upar) {
         if (dropExist) {
             droppeds.updateOneById(dropped._id, dropped).wasAcknowledged()
         } else {
@@ -211,14 +211,14 @@ suspend fun saveDropped(username: String,dropped: Dropped):Boolean{
     }
 }
 suspend fun deleteDropped(username:String,dropped: Dropped):Boolean{
-    if(username=="Upar"){
+    if(username==upar){
         return droppeds.deleteOneById(dropped._id).wasAcknowledged()
     }else{
         return false
     }
 }
 suspend fun saveToday(username: String,today: Today):Boolean{
-    return if(username== ListString.upar){
+    return if(username==upar){
         val todayExist= isTodayExists(today._id)
         if(todayExist){
             todays.updateOneById(today._id,today).wasAcknowledged()
@@ -247,7 +247,7 @@ suspend fun ToggleCheck(username:String,party: Party):Boolean{
     val isNope=isUserNope(username,party)
     val isDrop=isUserDrop(username,party)
     return if(isCheck && isNope != true && isDrop != true){
-        val newCheck= party.check
+        val newCheck= party.check - username
         parties.updateOneById(party._id, setValue(Party::check,newCheck)).wasAcknowledged()
     }else{
         if(isNope){
@@ -271,7 +271,7 @@ suspend fun toggleNope(username:String,party: Party):Boolean{
     val isCheck=(isUserCheck(username,party))
     val isDrop=(isUserDrop(username,party))
     return if(isNope && isCheck != true && isDrop != true){
-        val newNope= party.nope
+        val newNope= party.nope - username
         parties.updateOneById(party._id, setValue(Party::nope,newNope)).wasAcknowledged()
     }else{
         if(isCheck){
@@ -314,36 +314,18 @@ suspend fun toggleDrop(username:String,party: Party):Boolean{
         }
     }
 }
-suspend fun deleteTrading():Boolean{
+suspend fun deleteTrading(username:String):Boolean{
     val timestart = System.currentTimeMillis() - 345600000
-    return tradings.deleteMany(Trading::date lte timestart).wasAcknowledged()
+    if(username==upar){
+        return tradings.deleteMany(Trading::date lte timestart).wasAcknowledged()
+    }else return false
 }
-suspend fun deleteChat():Boolean{
+suspend fun deleteChat(username: String):Boolean{
     val timestart = System.currentTimeMillis() - 3600000
-    return chats.deleteMany(Chat::date lte timestart).wasAcknowledged()
+    if(username==upar){
+        return chats.deleteMany(Chat::date lte timestart).wasAcknowledged()
+    }else return false
 }
-
-
-
-//suspend fun getBuyingSearch(query:String):List<Trading>{
-//   tradings.ensureIndex(Trading::itemBuying.textIndex())
-//    val list= tradings.find(text(query, TextSearchOptions().caseSensitive(false))).sort(ascending(Trading::date)).toList()
-//    tradings.dropIndex( "itemBuying_text")
-//    return list
-//}
-//
-//suspend fun getSellingSearch(query:String):List<Trading>{
-//    tradings.ensureIndex(Trading::itemSelling.textIndex())
-//    val list= tradings.find(text(query,TextSearchOptions().caseSensitive(false))).sort(ascending(Trading::date)).toList()
-//    tradings.dropIndex("itemSelling_text")
-//    return list
-//}
-//suspend fun getAllSearch(query:String):List<Trading>{
-//    tradings.ensureIndex(Trading::desc.textIndex())
-//    val list= tradings.find(text(query,TextSearchOptions().caseSensitive(false))).sort(ascending(Trading::date)).toList()
-//    tradings.dropIndex("desc_text")
-//    return list
-//}
 
 
 
