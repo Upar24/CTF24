@@ -7,7 +7,6 @@ import com.upar.data.requests.OneRequest
 import com.upar.data.responses.SimpleResponse
 import io.ktor.application.*
 import io.ktor.auth.*
-import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.request.*
@@ -22,7 +21,7 @@ fun Route.chatRoute(){
                 val request = try {
                     call.receive<Chat>()
                 }catch (e: ContentTransformationException){
-                    call.respond(HttpStatusCode.BadRequest)
+                    call.respond(BadRequest)
                     return@post
                 }
                 if(request.chat?.length!! > 101){
@@ -52,7 +51,7 @@ fun Route.chatRoute(){
                 val request = try {
                     call.receive<Wall>()
                 }catch (e: ContentTransformationException){
-                    call.respond(HttpStatusCode.BadRequest)
+                    call.respond(BadRequest)
                     return@post
                 }
                 if(request.chat?.length!! > 101){
@@ -87,7 +86,7 @@ fun Route.chatRoute(){
                 val request=try {
                     call.receive<Wall>()
                 }catch (e: ContentTransformationException){
-                    call.respond(HttpStatusCode.BadRequest)
+                    call.respond(BadRequest)
                     return@post
                 }
                 val deleteWall= deleteWall(username,request)

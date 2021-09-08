@@ -6,7 +6,6 @@ import com.upar.data.requests.OneRequest
 import com.upar.data.responses.SimpleResponse
 import io.ktor.application.*
 import io.ktor.auth.*
-import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.request.*
@@ -113,6 +112,18 @@ fun Route.tradingRoute(){
                 return@post
             }
             val tradings= getListTradingTitle(request.property)
+            call.respond(OK,tradings)
+        }
+    }
+    route("/getdescriptionsearch"){
+        post {
+            val request= try {
+                call.receive<OneRequest>()
+            }catch (e:ContentTransformationException){
+                call.respond(BadRequest)
+                return@post
+            }
+            val tradings= getListTradingDesc(request.property)
             call.respond(OK,tradings)
         }
     }

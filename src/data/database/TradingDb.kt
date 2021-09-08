@@ -75,9 +75,9 @@ suspend fun saveTrading(username:String,trading: Trading):Boolean{
         user?.ign,
         trading.title,
         trading.desc,
-        trading.itemBuying.toString().lowercase(),
+        trading.itemBuying.toString().toLowerCase(),
         trading.amountBuying,
-        trading.itemSelling.toString().lowercase(),
+        trading.itemSelling.toString().toLowerCase(),
         trading.amountSelling,
         date,
         trading._id
@@ -90,10 +90,10 @@ suspend fun saveTrading(username:String,trading: Trading):Boolean{
     }
 }
 suspend fun deleteTrading(username: String,trading: Trading):Boolean{
-    if(username==trading.username){
-        return tradings.deleteOneById(trading._id).wasAcknowledged()
+    return if(username==trading.username){
+        tradings.deleteOneById(trading._id).wasAcknowledged()
     }else{
-        return false
+        false
     }
 }
 suspend fun getAllTrading():List<Trading>{
@@ -107,16 +107,20 @@ suspend fun getTrading(trading: Trading): Trading?{
 }
 
 suspend fun getBuyingSearch(query:String):List<Trading>{
-    val search = query.lowercase()
-    return tradings.find(Trading::itemBuying eq search).sort(descending(Trading::date)).limit(1000).toList()
+    val search = query.toLowerCase()
+    return tradings.find(Trading::itemBuying regex Regex("(?i).*$search.*")).sort(descending(Trading::date)).limit(1000).toList()
 }
 suspend fun getSellingSearch(query: String):List<Trading>{
-    val search = query.lowercase()
-    return tradings.find(Trading::itemSelling eq search).sort(descending(Trading::date)).limit(1000).toList()
+    val search = query.toLowerCase()
+    return tradings.find(Trading::itemSelling regex Regex("(?i).*$search.*")).sort(descending(Trading::date)).limit(1000).toList()
 }
 suspend fun getListTradingTitle(oneRequest:String):List<Trading>{
-    val request= oneRequest.lowercase()
-    return tradings.find(Trading::title eq request).sort(descending(Trading::date)).limit(1000).toList()
+    val request= oneRequest.toLowerCase()
+    return tradings.find(Trading::title regex Regex("(?i).*$request.*")).sort(descending(Trading::date)).limit(1000).toList()
+}
+suspend fun getListTradingDesc(oneRequest:String):List<Trading>{
+    val request= oneRequest.toLowerCase()
+    return tradings.find(Trading::desc regex Regex("(?i).*$request.*")).sort(descending(Trading::date)).limit(1000).toList()
 }
 suspend fun saveChat(username:String,chat: Chat):Boolean{
     val listType = listOf(lbhpost,lbhneeded,hotsale,random)
@@ -189,8 +193,8 @@ suspend fun saveParty(username:String,party: Party):Boolean{
         false
     }
 }
-suspend fun getParty():List<Party>{
-    return parties.find().sort(ascending(Party::no)).toList()
+suspend fun getParty(query:String):List<Party>{
+    return parties.find(Party::role eq query).sort(ascending(Party::no)).toList()
 }
 suspend fun getDropped():List<Dropped>{
     return droppeds.find().sort(descending(Dropped::day)).toList()
@@ -211,10 +215,10 @@ suspend fun saveDropped(username: String,dropped: Dropped):Boolean{
     }
 }
 suspend fun deleteDropped(username:String,dropped: Dropped):Boolean{
-    if(username==upar){
-        return droppeds.deleteOneById(dropped._id).wasAcknowledged()
+    return if(username==upar){
+        droppeds.deleteOneById(dropped._id).wasAcknowledged()
     }else{
-        return false
+        false
     }
 }
 suspend fun saveToday(username: String,today: Today):Boolean{
@@ -242,27 +246,31 @@ suspend fun isUserDrop(username: String,party: Party):Boolean{
     return username in party1.drop
 }
 
-suspend fun ToggleCheck(username:String,party: Party):Boolean{
+suspend fun toggleCheck(username:String,party: Party):Boolean{
     val isCheck= isUserCheck(username,party)
     val isNope=isUserNope(username,party)
     val isDrop=isUserDrop(username,party)
-    return if(isCheck && isNope != true && isDrop != true){
+    return if(isCheck && !isNope && !isDrop){
         val newCheck= party.check - username
         parties.updateOneById(party._id, setValue(Party::check,newCheck)).wasAcknowledged()
     }else{
-        if(isNope){
-            val newNope=party.nope - username
-            parties.updateOneById(party._id, setValue(Party::nope,newNope)).wasAcknowledged()
-            val newCheck=party.check + username
-            parties.updateOneById(party._id, setValue(Party::check,newCheck)).wasAcknowledged()
-        }else if(isDrop){
-            val newDrop= party.drop - username
-            parties.updateOneById(party._id, setValue(Party::drop,newDrop)).wasAcknowledged()
-            val newCheck=party.check + username
-            parties.updateOneById(party._id, setValue(Party::check,newCheck)).wasAcknowledged()
-        }else{
-            val newCheck=party.check + username
-            parties.updateOneById(party._id, setValue(Party::check,newCheck)).wasAcknowledged()
+        when {
+            isNope -> {
+                val newNope=party.nope - username
+                parties.updateOneById(party._id, setValue(Party::nope,newNope)).wasAcknowledged()
+                val newCheck=party.check + username
+                parties.updateOneById(party._id, setValue(Party::check,newCheck)).wasAcknowledged()
+            }
+            isDrop -> {
+                val newDrop= party.drop - username
+                parties.updateOneById(party._id, setValue(Party::drop,newDrop)).wasAcknowledged()
+                val newCheck=party.check + username
+                parties.updateOneById(party._id, setValue(Party::check,newCheck)).wasAcknowledged()
+            }
+            else -> {
+                val newCheck=party.check + username
+                parties.updateOneById(party._id, setValue(Party::check,newCheck)).wasAcknowledged()
+            }
         }
     }
 }
@@ -270,23 +278,27 @@ suspend fun toggleNope(username:String,party: Party):Boolean{
     val isNope= isUserNope(username,party)
     val isCheck=(isUserCheck(username,party))
     val isDrop=(isUserDrop(username,party))
-    return if(isNope && isCheck != true && isDrop != true){
+    return if(isNope && !isCheck && !isDrop){
         val newNope= party.nope - username
         parties.updateOneById(party._id, setValue(Party::nope,newNope)).wasAcknowledged()
     }else{
-        if(isCheck){
-            val newCheck= party.check - username
-            parties.updateOneById(party._id, setValue(Party::check,newCheck)).wasAcknowledged()
-            val newNope=party.nope + username
-            parties.updateOneById(party._id, setValue(Party::nope,newNope)).wasAcknowledged()
-        }else if (isDrop){
-            val newDrop= party.drop - username
-            parties.updateOneById(party._id, setValue(Party::drop,newDrop)).wasAcknowledged()
-            val newNope=party.nope + username
-            parties.updateOneById(party._id, setValue(Party::nope,newNope)).wasAcknowledged()
-        }else{
-            val newNope=party.nope + username
-            parties.updateOneById(party._id, setValue(Party::nope,newNope)).wasAcknowledged()
+        when {
+            isCheck -> {
+                val newCheck= party.check - username
+                parties.updateOneById(party._id, setValue(Party::check,newCheck)).wasAcknowledged()
+                val newNope=party.nope + username
+                parties.updateOneById(party._id, setValue(Party::nope,newNope)).wasAcknowledged()
+            }
+            isDrop -> {
+                val newDrop= party.drop - username
+                parties.updateOneById(party._id, setValue(Party::drop,newDrop)).wasAcknowledged()
+                val newNope=party.nope + username
+                parties.updateOneById(party._id, setValue(Party::nope,newNope)).wasAcknowledged()
+            }
+            else -> {
+                val newNope=party.nope + username
+                parties.updateOneById(party._id, setValue(Party::nope,newNope)).wasAcknowledged()
+            }
         }
     }
 }
@@ -294,37 +306,41 @@ suspend fun toggleDrop(username:String,party: Party):Boolean{
     val isDrop= isUserDrop(username,party)
     val isNope=(isUserNope(username,party))
     val isCheck= (isUserCheck(username,party))
-    return if(isDrop && isNope != true && isCheck != true){
+    return if(isDrop && !isNope && !isCheck){
         val newDrop= party.drop - username
         parties.updateOneById(party._id, setValue(Party::drop,newDrop)).wasAcknowledged()
     }else{
-        if(isNope){
-            val newNope= party.nope - username
-            parties.updateOneById(party._id, setValue(Party::nope,newNope)).wasAcknowledged()
-            val newDrop=party.drop + username
-            parties.updateOneById(party._id, setValue(Party::drop,newDrop)).wasAcknowledged()
-        }else if(isCheck){
-            val newCheck= party.check - username
-            parties.updateOneById(party._id, setValue(Party::check,newCheck)).wasAcknowledged()
-            val newDrop=party.drop + username
-            parties.updateOneById(party._id, setValue(Party::drop,newDrop)).wasAcknowledged()
-        }else{
-            val newDrop=party.drop + username
-            parties.updateOneById(party._id, setValue(Party::drop,newDrop)).wasAcknowledged()
+        when {
+            isNope -> {
+                val newNope= party.nope - username
+                parties.updateOneById(party._id, setValue(Party::nope,newNope)).wasAcknowledged()
+                val newDrop=party.drop + username
+                parties.updateOneById(party._id, setValue(Party::drop,newDrop)).wasAcknowledged()
+            }
+            isCheck -> {
+                val newCheck= party.check - username
+                parties.updateOneById(party._id, setValue(Party::check,newCheck)).wasAcknowledged()
+                val newDrop=party.drop + username
+                parties.updateOneById(party._id, setValue(Party::drop,newDrop)).wasAcknowledged()
+            }
+            else -> {
+                val newDrop=party.drop + username
+                parties.updateOneById(party._id, setValue(Party::drop,newDrop)).wasAcknowledged()
+            }
         }
     }
 }
 suspend fun deleteTrading(username:String):Boolean{
     val timestart = System.currentTimeMillis() - 345600000
-    if(username==upar){
-        return tradings.deleteMany(Trading::date lte timestart).wasAcknowledged()
-    }else return false
+    return if(username==upar){
+        tradings.deleteMany(Trading::date lte timestart).wasAcknowledged()
+    }else false
 }
 suspend fun deleteChat(username: String):Boolean{
     val timestart = System.currentTimeMillis() - 3600000
-    if(username==upar){
-        return chats.deleteMany(Chat::date lte timestart).wasAcknowledged()
-    }else return false
+    return if(username==upar){
+        chats.deleteMany(Chat::date lte timestart).wasAcknowledged()
+    }else false
 }
 
 
