@@ -61,10 +61,12 @@ suspend fun getListUser(listUsername:List<String>):List<User> {
     return users.find(User::username `in` listUsername).toList()
 }
 suspend fun getListUserClub(oneRequest:String):List<User>{
-    return users.find(User::clubName eq oneRequest).toList()
+    val club = if(oneRequest=="" || oneRequest.isEmpty())"klklklklkl" else oneRequest
+    return users.find(User::clubName eq club).toList()
 }
 suspend fun getListUserIGN(oneRequest: String):List<User>{
-    return users.find(User::ign eq oneRequest).toList()
+    val ign = if(oneRequest==""||oneRequest.isEmpty())"kokokokok" else oneRequest
+    return users.find(User::ign eq ign).toList()
 }
 suspend fun saveTrading(username:String,trading: Trading):Boolean{
     val user=users.findOne(User::username eq username)
@@ -107,19 +109,19 @@ suspend fun getTrading(trading: Trading): Trading?{
 }
 
 suspend fun getBuyingSearch(query:String):List<Trading>{
-    val search = query.toLowerCase()
+    val search = if(query=="" || query.isEmpty())"KLKLKLKLKLKL" else query.toLowerCase()
     return tradings.find(Trading::itemBuying regex Regex("(?i).*$search.*")).sort(descending(Trading::date)).limit(1000).toList()
 }
 suspend fun getSellingSearch(query: String):List<Trading>{
-    val search = query.toLowerCase()
+    val search = if(query=="" || query.isEmpty())"klklklklk" else query.toLowerCase()
     return tradings.find(Trading::itemSelling regex Regex("(?i).*$search.*")).sort(descending(Trading::date)).limit(1000).toList()
 }
 suspend fun getListTradingTitle(oneRequest:String):List<Trading>{
-    val request= oneRequest.toLowerCase()
+    val request= if(oneRequest=="" || oneRequest.isEmpty())"klklklklk" else oneRequest.toLowerCase()
     return tradings.find(Trading::title regex Regex("(?i).*$request.*")).sort(descending(Trading::date)).limit(1000).toList()
 }
 suspend fun getListTradingDesc(oneRequest:String):List<Trading>{
-    val request= oneRequest.toLowerCase()
+    val request= if(oneRequest=="" || oneRequest.isEmpty())"klklklklk" else oneRequest.toLowerCase()
     return tradings.find(Trading::desc regex Regex("(?i).*$request.*")).sort(descending(Trading::date)).limit(1000).toList()
 }
 suspend fun saveChat(username:String,chat: Chat):Boolean{
@@ -197,7 +199,7 @@ suspend fun getParty(query:String):List<Party>{
     return parties.find(Party::role eq query).sort(ascending(Party::no)).toList()
 }
 suspend fun getDropped():List<Dropped>{
-    return droppeds.find().sort(descending(Dropped::day)).toList()
+    return droppeds.find().toList()
 }
 suspend fun getToday(): Today?{
     return todays.findOne(Today::_id eq "1")

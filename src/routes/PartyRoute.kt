@@ -50,7 +50,8 @@ fun Route.partyRoute(){
     route("/savedrop"){
         get{
             val dropList= getDropped()
-            call.respond(OK,dropList)
+            val list= dropList.reversed()
+            call.respond(OK,list)
         }
         authenticate {
             post {
